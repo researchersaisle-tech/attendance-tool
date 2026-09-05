@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Team Attendance Tool</title>
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+    body { margin:0; background:#f2f4f7; color:#222; }
+    .wrap { max-width:480px; margin:0 auto; padding:24px 16px; min-height:100vh; }
+    .card { background:#fff; border-radius:14px; padding:22px; box-shadow:0 2px 10px rgba(0,0,0,.08); margin-bottom:16px; }
+    h2 { margin-top:0; color:#1a2b4c; }
+    input, button { width:100%; padding:12px; margin:6px 0; border-radius:8px; border:1px solid #ccc; font-size:15px; }
+    button { background:#1a2b4c; color:#fff; border:none; cursor:pointer; font-weight:600; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    button.secondary { background:#eee; color:#222; }
+    button.danger { background:#c0392b; }
+    .emp-item { display:flex; justify-content:space-between; align-items:center; padding:14px; background:#fff; border-radius:10px; margin-bottom:8px; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+    .emp-item:active { background:#eef1f7; }
+    video, canvas { width:100%; border-radius:10px; background:#000; }
+    .status-msg { padding:10px; border-radius:8px; margin-top:10px; font-size:14px; }
+    .status-ok { background:#e3f7e6; color:#1a7d33; }
+    .status-err { background:#fdecea; color:#c0392b; }
+    .hidden { display:none; }
+    .summary-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee; font-size:14px; }
+    .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .top-bar button { width:auto; padding:8px 14px; }
+    .loading { text-align:center; padding:20px; color:#888; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="view-login" class="card">
+    <h2>🔐 Team Login</h2>
+    <input id="loginUser" placeholder="Username">
+    <input id="loginPass" type="password" placeholder="Password">
+    <button onclick="doLogin()">Login</button>
+    <div id="loginMsg" class="status-msg hidden"></div>
+  </div>
+
+  <div id="view-dashboard" class="hidden">
+    <div class="top-bar">
+      <h2 style="margin:0">👋 Team Dashboard</h2>
+      <button class="secondary" onclick="logout()">Logout</button>
+    </div>
+    <div class="card">
+      <p>Apna naam select karein attendance ke liye:</p>
+      <div id="empList"></div>
+    </div>
+  </div>
+
+  <div id="view-attendance" class="hidden">
+    <div class="top-bar">
+      <h2 style="margin:0" id="attEmpName">Attendance</h2>
+      <button class="secondary" onclick="showDashboard()">⬅ Back</button>
+    </div>
+
+    <div class="card hidden" id="enrollCard">
+      <p><b>Pehli dafa hai?</b> Apna face enroll karein taake system aapko pehchan sake.</p>
+      <video id="videoEnroll" autoplay muted playsinline></video>
+      <button onclick="enrollFace()">📸 Enroll My Face</button>
+      <div id="enrollMsg" class="status-msg hidden"></div>
+    </div>
+
+    <div class="card" id="scanCard">
+      <video id="video" autoplay muted playsinline></video>
+      <button onclick="doCheckIn()">✅ Check In (Arrival)</button>
+      <button class="danger" onclick="doCheckOut()">🚪 Time Out (Leaving)</button>
+      <div id="scanMsg" class="status-msg hidden"></div>
+    </div>
+
+    <div class="card">
+      <h3>📊 Is Month Ki Summary</h3>
+      <div id="summaryBox" class="loading">Loading...</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ⚠️ Apna Apps Script Web App URL yahan paste karein (.../exec par khatam hoga)
+const API_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+
+let currentEmp = null;
+let modelsLoaded = false;
+
+async function callApi(action, payload) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight
+    body: JSON.stringify({ action, payload })
+  });
+  return res.json();
+}
+
+/* ---------- LOGIN ---------- */
+async function doLogin() {
+  const u = document.getElementById('loginUser').value;
+  const p = document.getElementById('loginPass').value;
+  const msg = document.getElementById('loginMsg');
+  msg.classList.add('hidden');
+  const res = await callApi('verifyLogin', { username: u, password: p });
+  if (res.success) {
+    currentEmp = res;
+    showDashboard();
+  } else {
+    msg.textContent = res.message;
+    msg.className = 'status-msg status-err';
+    msg.classList.remove('hidden');
+  }
+}
+
+function logout() {
+  currentEmp = null;
+  document.getElementById('view-dashboard').classList.add('hidden');
+  document.getElementById('view-attendance').classList.add('hidden');
+  document.getElementById('view-login').classList.remove('hidden');
+}
+
+/* ---------- DASHBOARD ---------- */
+async function showDashboard() {
+  document.getElementById('view-login').classList.add('hidden');
+  document.getElementById('view-attendance').classList.add('hidden');
+  document.getElementById('view-dashboard').classList.remove('hidden');
+  const list = await callApi('getEmployees', {});
+  const box = document.getElementById('empList');
+  box.innerHTML = '';
+  list.forEach(emp => {
+    const el = document.createElement('div');
+    el.className = 'emp-item';
+    el.innerHTML = `<span>${emp.name}</span><span style="color:#888;font-size:13px">${emp.store||''}</span>`;
+    el.onclick = () => openAttendance(emp);
+    box.appendChild(el);
+  });
+}
+
+/* ---------- ATTENDANCE PAGE ---------- */
+async function openAttendance(emp) {
+  currentEmp = emp;
+  document.getElementById('view-dashboard').classList.add('hidden');
+  document.getElementById('view-attendance').classList.remove('hidden');
+  document.getElementById('attEmpName').textContent = '🧑 ' + emp.name;
+  document.getElementById('enrollCard').classList.add('hidden');
+  document.getElementById('scanMsg').classList.add('hidden');
+
+  await loadModels();
+  await startCamera('video');
+  loadSummary();
+}
+
+async function loadModels() {
+  if (modelsLoaded) return;
+  const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+  await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+  await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+  await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+  modelsLoaded = true;
+}
+
+async function startCamera(videoId) {
+  const video = document.getElementById(videoId);
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+    video.srcObject = stream;
+  } catch (e) {
+    alert('Camera access nahi mil saka. Browser permissions check karein.');
+  }
+}
+
+async function captureDescriptor(videoId) {
+  const video = document.getElementById(videoId);
+  const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+    .withFaceLandmarks().withFaceDescriptor();
+  return detection ? Array.from(detection.descriptor) : null;
+}
+
+/* ---------- ENROLL ---------- */
+async function enrollFace() {
+  const msg = document.getElementById('enrollMsg');
+  msg.classList.remove('hidden');
+  msg.className = 'status-msg';
+  msg.textContent = 'Face scan ho raha hai...';
+  const desc = await captureDescriptor('videoEnroll');
+  if (!desc) {
+    msg.textContent = 'Face detect nahi hua. Camera ke samne seedha dekhein.';
+    msg.className = 'status-msg status-err';
+    return;
+  }
+  const res = await callApi('saveFaceDescriptor', { empId: currentEmp.empId, descriptor: desc });
+  msg.textContent = res.success ? 'Face enroll ho gaya ✅' : res.message;
+  msg.className = 'status-msg ' + (res.success ? 'status-ok' : 'status-err');
+  if (res.success) document.getElementById('enrollCard').classList.add('hidden');
+}
+
+/* ---------- CHECK IN / OUT ---------- */
+async function doCheckIn() {
+  const msg = document.getElementById('scanMsg');
+  msg.classList.remove('hidden');
+  msg.className = 'status-msg';
+  msg.textContent = 'Face scan ho raha hai...';
+  const desc = await captureDescriptor('video');
+  if (!desc) {
+    msg.textContent = 'Face detect nahi hua, dobara koshish karein.';
+    msg.className = 'status-msg status-err';
+    return;
+  }
+  const res = await callApi('recordCheckIn', { empId: currentEmp.empId, descriptor: desc });
+  if (!res.success && res.message.includes('enroll')) {
+    document.getElementById('enrollCard').classList.remove('hidden');
+    startCamera('videoEnroll');
+  }
+  msg.textContent = res.message;
+  msg.className = 'status-msg ' + (res.success ? 'status-ok' : 'status-err');
+  if (res.success) loadSummary();
+}
+
+async function doCheckOut() {
+  const msg = document.getElementById('scanMsg');
+  msg.classList.remove('hidden');
+  msg.className = 'status-msg';
+  msg.textContent = 'Face scan ho raha hai...';
+  const desc = await captureDescriptor('video');
+  if (!desc) {
+    msg.textContent = 'Face detect nahi hua, dobara koshish karein.';
+    msg.className = 'status-msg status-err';
+    return;
+  }
+  const res = await callApi('recordCheckOut', { empId: currentEmp.empId, descriptor: desc });
+  msg.textContent = res.message;
+  msg.className = 'status-msg ' + (res.success ? 'status-ok' : 'status-err');
+  if (res.success) loadSummary();
+}
+
+/* ---------- SUMMARY ---------- */
+async function loadSummary() {
+  const box = document.getElementById('summaryBox');
+  box.innerHTML = 'Loading...';
+  const sum = await callApi('getMyAttendanceSummary', { empId: currentEmp.empId });
+  let html = `
+    <div class="summary-row"><span>On Time Days</span><b>${sum.onTimeCount}</b></div>
+    <div class="summary-row"><span>Late Days</span><b>${sum.lateCount}</b></div>
+    <div class="summary-row"><span>Early Leave Days</span><b>${sum.earlyLeaveCount}</b></div>
+  `;
+  if (sum.penaltyTriggered) {
+    html += `<div class="status-msg status-err">⚠️ 5+ late arrivals is month — ${sum.deductionPercent}% profit deduction apply hogi.</div>`;
+  }
+  box.innerHTML = html;
+}
+</script>
+</body>
+</html>
