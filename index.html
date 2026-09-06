@@ -95,6 +95,7 @@
 
     <div class="card" id="scanCard">
       <video id="video" autoplay muted playsinline></video>
+      <p style="font-size:13px;color:#888;text-align:center;margin:6px 0 12px;">Kabhi bhi aayein — lekin jaane se pehle 9 ghante poore karne hain.</p>
       <button onclick="doCheckIn()">✅ Check In (Arrival)</button>
       <button class="danger" onclick="doCheckOut()">🚪 Time Out (Leaving)</button>
       <div id="scanMsg" class="status-msg hidden"></div>
@@ -372,12 +373,11 @@ async function loadSummary() {
   box.innerHTML = 'Loading...';
   const sum = await callApi('getMyAttendanceSummary', { empId: currentEmp.empId });
   let html = `
-    <div class="summary-row"><span>On Time Days</span><b>${sum.onTimeCount}</b></div>
-    <div class="summary-row"><span>Late Days</span><b>${sum.lateCount}</b></div>
-    <div class="summary-row"><span>Early Leave Days</span><b>${sum.earlyLeaveCount}</b></div>
+    <div class="summary-row"><span>Full Days (${sum.requiredHours}+ hrs)</span><b>${sum.fullDayCount}</b></div>
+    <div class="summary-row"><span>Short Days (&lt;${sum.requiredHours} hrs)</span><b>${sum.shortDayCount}</b></div>
   `;
   if (sum.penaltyTriggered) {
-    html += `<div class="status-msg status-err">⚠️ 5+ late arrivals is month — ${sum.deductionPercent}% profit deduction apply hogi.</div>`;
+    html += `<div class="status-msg status-err">⚠️ ${sum.shortDayCount} short days is month (5 se zyada) — ${sum.deductionPercent}% profit deduction apply hogi.</div>`;
   }
   box.innerHTML = html;
 }
