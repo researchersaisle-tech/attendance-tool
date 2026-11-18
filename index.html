@@ -11,153 +11,144 @@
     .wrap { max-width:480px; margin:0 auto; padding:24px 16px; min-height:100vh; }
     .card { background:#fff; border-radius:14px; padding:22px; box-shadow:0 2px 10px rgba(0,0,0,.08); margin-bottom:16px; }
     h2 { margin-top:0; color:#1a2b4c; }
-    input, button { width:100%; padding:12px; margin:6px 0; border-radius:8px; border:1px solid #ccc; font-size:15px; }
+    input, button, select { width:100%; padding:12px; margin:6px 0; border-radius:8px; border:1px solid #ccc; font-size:15px; }
+    select { background:#fff; }
     button { background:#1a2b4c; color:#fff; border:none; cursor:pointer; font-weight:600; }
     button:disabled { opacity:.5; cursor:not-allowed; }
     button.secondary { background:#eee; color:#222; }
     button.danger { background:#c0392b; }
-    .emp-item { display:flex; justify-content:space-between; align-items:center; padding:14px; background:#fff; border-radius:10px; margin-bottom:8px; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.06); }
-    .emp-item:active { background:#eef1f7; }
-    video, canvas { width:100%; border-radius:10px; background:#000; }
+    video { width:100%; border-radius:10px; background:#000; }
     .status-msg { padding:10px; border-radius:8px; margin-top:10px; font-size:14px; }
     .status-ok { background:#e3f7e6; color:#1a7d33; }
     .status-err { background:#fdecea; color:#c0392b; }
+    .status-info { background:#eaf1fb; color:#1a4b8c; }
     .hidden { display:none; }
     .summary-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee; font-size:14px; }
-    .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:10px; }
     .top-bar button { width:auto; padding:8px 14px; }
     .loading { text-align:center; padding:20px; color:#888; }
-    .menu-item { cursor:pointer; transition:background .15s ease; }
+    .menu-item { cursor:pointer; }
     .menu-item:active { background:#eef1f7; }
     .menu-title { font-size:17px; font-weight:700; color:#1a2b4c; }
     .menu-sub { font-size:13px; color:#888; margin-top:4px; }
-    .field-label { font-size:12px; font-weight:600; color:#555; margin-top:10px; margin-bottom:2px; }
-    select { width:100%; padding:12px; margin:6px 0; border-radius:8px; border:1px solid #ccc; font-size:15px; background:#fff; }
+    .field-label { font-size:12px; font-weight:600; color:#555; margin-top:10px; margin-bottom:2px; display:block; }
     .check-row { padding:8px 0; font-size:14px; }
     .check-row label { display:flex; align-items:center; gap:8px; cursor:pointer; }
     .check-row input { width:auto; margin:0; }
-    .store-item { display:flex; justify-content:space-between; align-items:center; padding:14px; background:#fff; border-radius:10px; margin-bottom:8px; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.06); font-weight:600; }
+    .store-item { padding:14px; background:#fff; border-radius:10px; margin-bottom:8px; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.06); font-weight:600; }
     .store-item:active { background:#eef1f7; }
     .history-row { padding:10px 0; border-bottom:1px solid #eee; font-size:13px; }
     .history-row .hdate { font-weight:700; color:#1a2b4c; }
     .history-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:4px; color:#555; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:12px; font-weight:600; }
+    .badge-ok { background:#e3f7e6; color:#1a7d33; }
+    .badge-short { background:#fdecea; color:#c0392b; }
+    .badge-open { background:#eaf1fb; color:#1a4b8c; }
   </style>
 </head>
 <body>
 <div class="wrap">
 
+  <!-- LOGIN -->
   <div id="view-login" class="card">
     <h2>🔐 Team Login</h2>
-    <input id="loginUser" placeholder="Username">
-    <input id="loginPass" type="password" placeholder="Password">
-    <button onclick="doLogin()">Login</button>
+    <input id="loginUser" placeholder="Username" autocomplete="username">
+    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password"
+           onkeydown="if(event.key==='Enter') doLogin()">
+    <button id="loginBtn" onclick="doLogin()">Login</button>
     <div id="loginMsg" class="status-msg hidden"></div>
   </div>
 
-  <div id="view-dashboard" class="hidden">
-    <div class="top-bar">
-      <h2 style="margin:0">👋 Team Dashboard</h2>
-      <button class="secondary" onclick="logout()">Logout</button>
-    </div>
-    <div class="card">
-      <p>Apna naam select karein attendance ke liye:</p>
-      <div id="empList"></div>
-    </div>
-  </div>
-
+  <!-- MENU (own name only) -->
   <div id="view-menu" class="hidden">
     <div class="top-bar">
       <h2 style="margin:0" id="menuEmpName">👋</h2>
-      <button class="secondary" onclick="showDashboard()">⬅ Back</button>
+      <button class="secondary" onclick="logout()">Logout</button>
     </div>
-    <div class="card menu-item" onclick="openAttendance(currentEmp)">
+    <div class="card menu-item" onclick="openAttendance()">
       <div class="menu-title">🕐 Attendance</div>
-      <div class="menu-sub">Check in / Check out, monthly summary</div>
+      <div class="menu-sub">Check in / Time out, monthly summary</div>
     </div>
-    <div class="card menu-item" onclick="openStoreMenu(currentEmp)">
+    <div class="card menu-item" onclick="openStoreMenu()">
       <div class="menu-title">📈 Store Performance</div>
       <div class="menu-sub">Daily sales &amp; task tracking</div>
     </div>
   </div>
 
+  <!-- ATTENDANCE -->
   <div id="view-attendance" class="hidden">
     <div class="top-bar">
-      <h2 style="margin:0" id="attEmpName">Attendance</h2>
+      <h2 style="margin:0">🕐 Attendance</h2>
       <button class="secondary" onclick="showMenu()">⬅ Back</button>
     </div>
 
     <div class="card hidden" id="enrollCard">
-      <p><b>Pehli dafa hai?</b> Apna face enroll karein taake system aapko pehchan sake.</p>
+      <p><b>Pehli dafa hai?</b> Apna face enroll karein taake system aapko pehchan sake. (Ye sirf ek baar hota hai.)</p>
       <video id="videoEnroll" autoplay muted playsinline></video>
-      <button onclick="enrollFace()">📸 Enroll My Face</button>
+      <button id="enrollBtn" onclick="enrollFace()">📸 Enroll My Face</button>
       <div id="enrollMsg" class="status-msg hidden"></div>
     </div>
 
     <div class="card" id="scanCard">
       <video id="video" autoplay muted playsinline></video>
       <p style="font-size:13px;color:#888;text-align:center;margin:6px 0 12px;">Kabhi bhi aayein — lekin jaane se pehle 9 ghante poore karne hain.</p>
-      <button onclick="doCheckIn()">✅ Check In (Arrival)</button>
-      <button class="danger" onclick="doCheckOut()">🚪 Time Out (Leaving)</button>
+      <div id="openInfo" class="status-msg status-info hidden"></div>
+      <button id="inBtn" onclick="doCheckIn()">✅ Check In (Arrival)</button>
+      <button id="outBtn" class="danger" onclick="doCheckOut()">🚪 Time Out (Leaving)</button>
       <div id="scanMsg" class="status-msg hidden"></div>
     </div>
 
     <div class="card">
-      <h3>📊 Is Month Ki Summary</h3>
+      <h3 style="margin-top:0">📊 Is Month Ki Summary</h3>
       <div id="summaryBox" class="loading">Loading...</div>
     </div>
   </div>
 
+  <!-- STORE SELECT -->
   <div id="view-store-select" class="hidden">
     <div class="top-bar">
       <h2 style="margin:0">📈 Store Select Karein</h2>
       <button class="secondary" onclick="showMenu()">⬅ Back</button>
     </div>
-    <div class="card">
-      <div id="storeList"></div>
-    </div>
+    <div class="card"><div id="storeList"></div></div>
   </div>
 
+  <!-- STORE PERFORMANCE -->
   <div id="view-store-perf" class="hidden">
     <div class="top-bar">
       <h2 style="margin:0" id="perfStoreName">Store</h2>
-      <button class="secondary" onclick="openStoreMenu(currentEmp)">⬅ Back</button>
+      <button class="secondary" onclick="backFromPerf()">⬅ Back</button>
     </div>
 
     <div class="card">
       <h3 style="margin-top:0">📅 Aaj Ki Entry</h3>
 
-      <label class="field-label">Total Sales (£)</label>
-      <input id="pTotalSales" type="number" placeholder="e.g. 65" step="0.01">
+      <label class="field-label" for="pTotalSales">Total Sales (£)</label>
+      <input id="pTotalSales" type="number" placeholder="e.g. 65" step="0.01" min="0">
 
-      <label class="field-label">New Listings</label>
-      <input id="pNewListings" type="number" placeholder="e.g. 3">
+      <label class="field-label" for="pNewListings">New Listings</label>
+      <input id="pNewListings" type="number" placeholder="e.g. 3" min="0">
 
-      <label class="field-label">Listings Optimized?</label>
+      <label class="field-label" for="pListingsOptimized">Listings Optimized?</label>
       <select id="pListingsOptimized">
         <option value="yes">Yes</option>
         <option value="no">No</option>
       </select>
 
-      <div class="check-row">
-        <label><input type="checkbox" id="pOrdersDone"> Orders (sab process ho gaye)</label>
-      </div>
-      <div class="check-row">
-        <label><input type="checkbox" id="pMessagesReplied"> Messages Replied</label>
-      </div>
-      <div class="check-row">
-        <label><input type="checkbox" id="pTrackingUploaded"> Tracking Uploaded</label>
-      </div>
+      <div class="check-row"><label><input type="checkbox" id="pOrdersDone"> Orders (sab process ho gaye)</label></div>
+      <div class="check-row"><label><input type="checkbox" id="pMessagesReplied"> Messages Replied</label></div>
+      <div class="check-row"><label><input type="checkbox" id="pTrackingUploaded"> Tracking Uploaded</label></div>
 
-      <label class="field-label">Open Returns</label>
-      <input id="pOpenReturns" type="number" placeholder="0">
+      <label class="field-label" for="pOpenReturns">Open Returns</label>
+      <input id="pOpenReturns" type="number" placeholder="0" min="0">
 
-      <label class="field-label">Open Disputes</label>
-      <input id="pOpenDisputes" type="number" placeholder="0">
+      <label class="field-label" for="pOpenDisputes">Open Disputes</label>
+      <input id="pOpenDisputes" type="number" placeholder="0" min="0">
 
-      <label class="field-label">Notes</label>
+      <label class="field-label" for="pNotes">Notes</label>
       <input id="pNotes" placeholder="Koi note (optional)">
 
-      <button onclick="submitPerformance()">💾 Save Entry</button>
+      <button id="perfBtn" onclick="submitPerformance()">💾 Save Entry</button>
       <div id="perfMsg" class="status-msg hidden"></div>
     </div>
 
@@ -175,103 +166,84 @@
 </div>
 
 <script>
-// ⚠️ Apna Apps Script Web App URL yahan paste karein (.../exec par khatam hoga)
 const API_URL = 'https://script.google.com/macros/s/AKfycbwfvRn06tn-3XIz2a5qIU9VnqwkzrousUPQSezU_la9dieT7EHYfnZBtSc2sOutGQ6c/exec';
 
-let currentEmp = null;
+// Session lives only in memory: closing/refreshing the page logs out.
+let sessionToken = null;
+let me = null;              // { name, stores, hasFaceEnrolled }
+let currentStore = null;
 let modelsLoaded = false;
 
+const $ = id => document.getElementById(id);
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+function show(viewId) {
+  ['view-login','view-menu','view-attendance','view-store-select','view-store-perf']
+    .forEach(v => $(v).classList.toggle('hidden', v !== viewId));
+}
+function setMsg(el, text, kind) {
+  el.textContent = text;
+  el.className = 'status-msg' + (kind ? ' status-' + kind : '');
+  el.classList.remove('hidden');
+}
+
+/* ---------- API ---------- */
 async function callApi(action, payload) {
   try {
-    const url = API_URL + '?payload=' + encodeURIComponent(JSON.stringify({ action, payload }));
+    const url = API_URL + '?payload=' + encodeURIComponent(JSON.stringify({ action, payload: payload || {}, token: sessionToken }));
     const res = await fetch(url, { method: 'GET' });
     const text = await res.text();
-    try {
-      return JSON.parse(text);
-    } catch (parseErr) {
-      console.error('Non-JSON response from API:', text);
-      return { success: false, message: 'API se galat response aaya (deployment access check karein). Raw: ' + text.slice(0, 150) };
-    }
-  } catch (networkErr) {
-    console.error('Network error calling API:', networkErr);
-    return { success: false, message: 'API tak connect nahi ho saka. API_URL sahi hai? Internet check karein. (' + networkErr.message + ')' };
+    let data;
+    try { data = JSON.parse(text); }
+    catch (e) { return { success: false, message: 'API se galat response aaya. Deployment check karein.' }; }
+    if (data && data.authError) { sessionExpired(); }
+    return data;
+  } catch (err) {
+    return { success: false, message: 'Server se connect nahi ho saka. Internet check karein.' };
   }
+}
+
+function sessionExpired() {
+  stopCameras();
+  sessionToken = null; me = null;
+  show('view-login');
+  setMsg($('loginMsg'), 'Session expire ho gaya. Dobara login karein.', 'err');
 }
 
 /* ---------- LOGIN ---------- */
 async function doLogin() {
-  const u = document.getElementById('loginUser').value;
-  const p = document.getElementById('loginPass').value;
-  const msg = document.getElementById('loginMsg');
+  const btn = $('loginBtn'), msg = $('loginMsg');
   msg.classList.add('hidden');
-  const res = await callApi('verifyLogin', { username: u, password: p });
+  btn.disabled = true; btn.textContent = 'Login ho raha hai...';
+  const res = await callApi('verifyLogin', { username: $('loginUser').value, password: $('loginPass').value });
+  btn.disabled = false; btn.textContent = 'Login';
   if (res.success) {
-    currentEmp = res;
-    showDashboard();
+    sessionToken = res.token;
+    me = { name: res.name, stores: res.stores || [], hasFaceEnrolled: !!res.hasFaceEnrolled };
+    $('loginPass').value = '';
+    showMenu();
   } else {
-    msg.textContent = res.message;
-    msg.className = 'status-msg status-err';
-    msg.classList.remove('hidden');
+    setMsg(msg, res.message || 'Login nahi ho saka.', 'err');
   }
 }
 
 function logout() {
-  currentEmp = null;
-  document.getElementById('view-dashboard').classList.add('hidden');
-  document.getElementById('view-attendance').classList.add('hidden');
-  document.getElementById('view-login').classList.remove('hidden');
+  stopCameras();
+  sessionToken = null; me = null;
+  $('loginUser').value = ''; $('loginPass').value = '';
+  $('loginMsg').classList.add('hidden');
+  show('view-login');
 }
 
-/* ---------- DASHBOARD ---------- */
-async function showDashboard() {
-  document.getElementById('view-login').classList.add('hidden');
-  document.getElementById('view-menu').classList.add('hidden');
-  document.getElementById('view-attendance').classList.add('hidden');
-  document.getElementById('view-store-select').classList.add('hidden');
-  document.getElementById('view-store-perf').classList.add('hidden');
-  document.getElementById('view-dashboard').classList.remove('hidden');
-  const list = await callApi('getEmployees', {});
-  const box = document.getElementById('empList');
-  box.innerHTML = '';
-  list.forEach(emp => {
-    const el = document.createElement('div');
-    el.className = 'emp-item';
-    el.innerHTML = `<span>${emp.name}</span><span style="color:#888;font-size:13px">${emp.store||''}</span>`;
-    el.onclick = () => openMenu(emp);
-    box.appendChild(el);
-  });
-}
-
-/* ---------- MENU (choose Attendance vs Store Performance) ---------- */
-function openMenu(emp) {
-  currentEmp = emp;
-  document.getElementById('view-dashboard').classList.add('hidden');
-  document.getElementById('view-menu').classList.remove('hidden');
-  document.getElementById('menuEmpName').textContent = '👋 ' + emp.name;
-}
-
+/* ---------- MENU ---------- */
 function showMenu() {
-  document.getElementById('view-attendance').classList.add('hidden');
-  document.getElementById('view-store-select').classList.add('hidden');
-  document.getElementById('view-store-perf').classList.add('hidden');
-  document.getElementById('view-menu').classList.remove('hidden');
+  stopCameras();
+  $('menuEmpName').textContent = '👋 ' + me.name;
+  show('view-menu');
 }
 
-/* ---------- ATTENDANCE PAGE ---------- */
-async function openAttendance(emp) {
-  currentEmp = emp;
-  document.getElementById('view-dashboard').classList.add('hidden');
-  document.getElementById('view-menu').classList.add('hidden');
-  document.getElementById('view-attendance').classList.remove('hidden');
-  document.getElementById('attEmpName').textContent = '🧑 ' + emp.name;
-  document.getElementById('enrollCard').classList.add('hidden');
-  document.getElementById('scanMsg').classList.add('hidden');
-
-  await loadModels();
-  await startCamera('video');
-  loadSummary();
-}
-
+/* ---------- CAMERA / FACE ---------- */
 async function loadModels() {
   if (modelsLoaded) return;
   const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
@@ -282,131 +254,139 @@ async function loadModels() {
 }
 
 async function startCamera(videoId) {
-  const video = document.getElementById(videoId);
+  const video = $(videoId);
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
-    video.srcObject = stream;
+    video.srcObject = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    return true;
   } catch (e) {
     alert('Camera access nahi mil saka. Browser permissions check karein.');
+    return false;
   }
+}
+
+function stopCameras() {
+  ['video', 'videoEnroll'].forEach(id => {
+    const v = $(id);
+    if (v && v.srcObject) { v.srcObject.getTracks().forEach(t => t.stop()); v.srcObject = null; }
+  });
 }
 
 async function captureDescriptor(videoId) {
-  const video = document.getElementById(videoId);
-  const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+  const det = await faceapi.detectSingleFace($(videoId), new faceapi.TinyFaceDetectorOptions())
     .withFaceLandmarks().withFaceDescriptor();
-  return detection ? Array.from(detection.descriptor) : null;
+  // 4 decimals is plenty and keeps the request small
+  return det ? Array.from(det.descriptor).map(x => Math.round(x * 10000) / 10000) : null;
 }
 
-/* ---------- ENROLL ---------- */
+/* ---------- ATTENDANCE ---------- */
+async function openAttendance() {
+  show('view-attendance');
+  $('scanMsg').classList.add('hidden');
+  $('enrollMsg').classList.add('hidden');
+  $('enrollCard').classList.toggle('hidden', me.hasFaceEnrolled);
+  $('scanCard').classList.toggle('hidden', !me.hasFaceEnrolled);
+
+  loadSummary();
+  const msgEl = me.hasFaceEnrolled ? $('scanMsg') : $('enrollMsg');
+  setMsg(msgEl, 'Face recognition load ho raha hai...', 'info');
+  try { await loadModels(); } catch (e) { setMsg(msgEl, 'Face models load nahi ho sake. Internet check karein.', 'err'); return; }
+  msgEl.classList.add('hidden');
+  await startCamera(me.hasFaceEnrolled ? 'video' : 'videoEnroll');
+}
+
 async function enrollFace() {
-  const msg = document.getElementById('enrollMsg');
-  msg.classList.remove('hidden');
-  msg.className = 'status-msg';
-  msg.textContent = 'Face scan ho raha hai...';
-  const desc = await captureDescriptor('videoEnroll');
-  if (!desc) {
-    msg.textContent = 'Face detect nahi hua. Camera ke samne seedha dekhein.';
-    msg.className = 'status-msg status-err';
-    return;
-  }
-  const res = await callApi('saveFaceDescriptor', { empId: currentEmp.empId, descriptor: desc });
-  msg.textContent = res.success ? 'Face enroll ho gaya ✅' : res.message;
-  msg.className = 'status-msg ' + (res.success ? 'status-ok' : 'status-err');
-  if (res.success) document.getElementById('enrollCard').classList.add('hidden');
+  const btn = $('enrollBtn'), msg = $('enrollMsg');
+  btn.disabled = true;
+  setMsg(msg, 'Face scan ho raha hai...', 'info');
+  try {
+    const desc = await captureDescriptor('videoEnroll');
+    if (!desc) { setMsg(msg, 'Face detect nahi hua. Camera ke samne seedha dekhein.', 'err'); return; }
+    const res = await callApi('saveFaceDescriptor', { descriptor: desc });
+    if (res.success) {
+      me.hasFaceEnrolled = true;
+      stopCameras();
+      $('enrollCard').classList.add('hidden');
+      $('scanCard').classList.remove('hidden');
+      await startCamera('video');
+      setMsg($('scanMsg'), 'Face enroll ho gaya ✅ Ab Check In kar sakte hain.', 'ok');
+    } else {
+      setMsg(msg, res.message || 'Enroll nahi ho saka.', 'err');
+    }
+  } catch (e) {
+    setMsg(msg, 'Error: ' + e.message, 'err');
+  } finally { btn.disabled = false; }
 }
 
-/* ---------- CHECK IN / OUT ---------- */
-async function doCheckIn() {
-  const msg = document.getElementById('scanMsg');
-  msg.classList.remove('hidden');
-  msg.className = 'status-msg';
-  msg.textContent = 'Face scan ho raha hai...';
+async function scanAndSend(action, btnIds) {
+  const msg = $('scanMsg');
+  btnIds.forEach(id => $(id).disabled = true);
+  setMsg(msg, 'Face scan ho raha hai...', 'info');
   try {
     const desc = await captureDescriptor('video');
-    if (!desc) {
-      msg.textContent = 'Face detect nahi hua, dobara koshish karein. (Achi lighting mein camera ke seedha samne dekhein)';
-      msg.className = 'status-msg status-err';
+    if (!desc) { setMsg(msg, 'Face detect nahi hua. Achi lighting mein camera ke seedha samne dekhein.', 'err'); return; }
+    const res = await callApi(action, { descriptor: desc });
+    if (res.needsEnroll) {
+      me.hasFaceEnrolled = false;
+      openAttendance();
       return;
     }
-    const res = await callApi('recordCheckIn', { empId: currentEmp.empId, descriptor: desc });
-    if (!res.success && res.message && res.message.includes('enroll')) {
-      document.getElementById('enrollCard').classList.remove('hidden');
-      startCamera('videoEnroll');
-    }
-    msg.textContent = res.message;
-    msg.className = 'status-msg ' + (res.success ? 'status-ok' : 'status-err');
+    setMsg(msg, res.message, res.success ? 'ok' : 'err');
     if (res.success) loadSummary();
-  } catch (err) {
-    console.error(err);
-    msg.textContent = 'Error: ' + err.message;
-    msg.className = 'status-msg status-err';
-  }
+  } catch (e) {
+    setMsg(msg, 'Error: ' + e.message, 'err');
+  } finally { btnIds.forEach(id => $(id).disabled = false); }
 }
+function doCheckIn()  { return scanAndSend('recordCheckIn',  ['inBtn', 'outBtn']); }
+function doCheckOut() { return scanAndSend('recordCheckOut', ['inBtn', 'outBtn']); }
 
-async function doCheckOut() {
-  const msg = document.getElementById('scanMsg');
-  msg.classList.remove('hidden');
-  msg.className = 'status-msg';
-  msg.textContent = 'Face scan ho raha hai...';
-  try {
-    const desc = await captureDescriptor('video');
-    if (!desc) {
-      msg.textContent = 'Face detect nahi hua, dobara koshish karein. (Achi lighting mein camera ke seedha samne dekhein)';
-      msg.className = 'status-msg status-err';
-      return;
-    }
-    const res = await callApi('recordCheckOut', { empId: currentEmp.empId, descriptor: desc });
-    msg.textContent = res.message;
-    msg.className = 'status-msg ' + (res.success ? 'status-ok' : 'status-err');
-    if (res.success) loadSummary();
-  } catch (err) {
-    console.error(err);
-    msg.textContent = 'Error: ' + err.message;
-    msg.className = 'status-msg status-err';
-  }
-}
-
-/* ---------- SUMMARY ---------- */
 async function loadSummary() {
-  const box = document.getElementById('summaryBox');
-  box.innerHTML = 'Loading...';
-  const sum = await callApi('getMyAttendanceSummary', { empId: currentEmp.empId });
-  let html = `
-    <div class="summary-row"><span>Full Days (${sum.requiredHours}+ hrs)</span><b>${sum.fullDayCount}</b></div>
-    <div class="summary-row"><span>Short Days (&lt;${sum.requiredHours} hrs)</span><b>${sum.shortDayCount}</b></div>
-  `;
+  const box = $('summaryBox');
+  box.className = 'loading'; box.textContent = 'Loading...';
+  const sum = await callApi('getMyAttendanceSummary');
+  if (!sum.success) { box.innerHTML = '<div class="status-msg status-err">' + esc(sum.message || 'Load nahi ho saka.') + '</div>'; return; }
+
+  const open = $('openInfo');
+  if (sum.openSince) {
+    open.textContent = '⏱ Aap ' + sum.openSince.checkIn + ' se check-in hain (' + sum.openSince.date + ').';
+    open.classList.remove('hidden');
+  } else { open.classList.add('hidden'); }
+
+  let html =
+    '<div class="summary-row"><span>Full Days (' + sum.requiredHours + '+ hrs)</span><b>' + sum.fullDayCount + '</b></div>' +
+    '<div class="summary-row"><span>Short Days (&lt;' + sum.requiredHours + ' hrs)</span><b>' + sum.shortDayCount + '</b></div>';
   if (sum.penaltyTriggered) {
-    html += `<div class="status-msg status-err">⚠️ ${sum.shortDayCount} short days is month (5 se zyada) — ${sum.deductionPercent}% profit deduction apply hogi.</div>`;
+    html += '<div class="status-msg status-err">⚠️ ' + sum.shortDayCount + ' short days is month (5 se zyada) — ' +
+            sum.deductionPercent + '% profit deduction apply hogi.</div>';
   }
-  box.innerHTML = html;
+  if (sum.records.length) {
+    html += '<div style="margin-top:12px;font-weight:700;font-size:13px;color:#1a2b4c;">Recent Days</div>';
+    html += sum.records.map(r => {
+      let badge;
+      if (r.shortDay === 'Yes') badge = '<span class="badge badge-short">Short</span>';
+      else if (r.shortDay === 'No') badge = '<span class="badge badge-ok">Full</span>';
+      else badge = '<span class="badge badge-open">Open</span>';
+      const hrs = r.shortDay ? (Number(r.hoursWorked) || 0).toFixed(1) + ' hrs' : '—';
+      return '<div class="summary-row"><span>' + esc(r.date) + ' &nbsp; ' + esc(r.checkIn) + ' → ' + esc(r.checkOut || '…') +
+             '</span><span>' + hrs + ' ' + badge + '</span></div>';
+    }).join('');
+  }
+  box.className = ''; box.innerHTML = html;
 }
 
 /* ---------- STORE PERFORMANCE ---------- */
-let currentStore = null;
-
-async function openStoreMenu(emp) {
-  currentEmp = emp;
-  document.getElementById('view-menu').classList.add('hidden');
-  document.getElementById('view-store-select').classList.remove('hidden');
-
-  const box = document.getElementById('storeList');
-  box.innerHTML = 'Loading...';
-  const res = await callApi('getEmployeeStores', { empId: emp.empId });
-
-  if (!res.success || res.stores.length === 0) {
-    box.innerHTML = '<div class="status-msg status-err">Koi store assign nahi hai. Employees sheet ka Store column check karein.</div>';
+function openStoreMenu() {
+  stopCameras();
+  const stores = me.stores;
+  if (!stores.length) {
+    show('view-store-select');
+    $('storeList').innerHTML = '<div class="status-msg status-err">Aapko koi store assign nahi hai. Admin se rabta karein.</div>';
     return;
   }
-
-  // If only one store, skip straight to the entry page.
-  if (res.stores.length === 1) {
-    openStorePerf(res.stores[0]);
-    return;
-  }
-
+  if (stores.length === 1) { openStorePerf(stores[0]); return; }
+  show('view-store-select');
+  const box = $('storeList');
   box.innerHTML = '';
-  res.stores.forEach(store => {
+  stores.forEach(store => {
     const el = document.createElement('div');
     el.className = 'store-item';
     el.textContent = store;
@@ -415,100 +395,79 @@ async function openStoreMenu(emp) {
   });
 }
 
+function backFromPerf() { me.stores.length > 1 ? openStoreMenu() : showMenu(); }
+
 async function openStorePerf(store) {
   currentStore = store;
-  document.getElementById('view-store-select').classList.add('hidden');
-  document.getElementById('view-store-perf').classList.remove('hidden');
-  document.getElementById('perfStoreName').textContent = '📈 ' + store;
-  document.getElementById('perfMsg').classList.add('hidden');
-
-  // reset form
-  document.getElementById('pTotalSales').value = '';
-  document.getElementById('pNewListings').value = '';
-  document.getElementById('pListingsOptimized').value = 'yes';
-  document.getElementById('pOrdersDone').checked = false;
-  document.getElementById('pMessagesReplied').checked = false;
-  document.getElementById('pTrackingUploaded').checked = false;
-  document.getElementById('pOpenReturns').value = '';
-  document.getElementById('pOpenDisputes').value = '';
-  document.getElementById('pNotes').value = '';
-
+  show('view-store-perf');
+  $('perfStoreName').textContent = '📈 ' + store;
+  $('perfMsg').classList.add('hidden');
+  ['pTotalSales','pNewListings','pOpenReturns','pOpenDisputes','pNotes'].forEach(id => $(id).value = '');
+  $('pListingsOptimized').value = 'yes';
+  ['pOrdersDone','pMessagesReplied','pTrackingUploaded'].forEach(id => $(id).checked = false);
   await loadStorePerfSummary();
 }
 
 async function submitPerformance() {
-  const msg = document.getElementById('perfMsg');
-  msg.classList.remove('hidden');
-  msg.className = 'status-msg';
-  msg.textContent = 'Save ho raha hai...';
-
-  const payload = {
-    empId: currentEmp.empId,
+  const btn = $('perfBtn'), msg = $('perfMsg');
+  btn.disabled = true;
+  setMsg(msg, 'Save ho raha hai...', 'info');
+  const res = await callApi('submitStorePerformance', {
     store: currentStore,
-    totalSales: document.getElementById('pTotalSales').value,
-    newListings: document.getElementById('pNewListings').value,
-    listingsOptimized: document.getElementById('pListingsOptimized').value === 'yes',
-    ordersDone: document.getElementById('pOrdersDone').checked,
-    messagesReplied: document.getElementById('pMessagesReplied').checked,
-    trackingUploaded: document.getElementById('pTrackingUploaded').checked,
-    openReturns: document.getElementById('pOpenReturns').value,
-    openDisputes: document.getElementById('pOpenDisputes').value,
-    notes: document.getElementById('pNotes').value
-  };
-
-  const res = await callApi('submitStorePerformance', payload);
-  msg.textContent = res.message;
-  msg.className = 'status-msg ' + (res.success ? 'status-ok' : 'status-err');
+    totalSales: $('pTotalSales').value,
+    newListings: $('pNewListings').value,
+    listingsOptimized: $('pListingsOptimized').value === 'yes',
+    ordersDone: $('pOrdersDone').checked,
+    messagesReplied: $('pMessagesReplied').checked,
+    trackingUploaded: $('pTrackingUploaded').checked,
+    openReturns: $('pOpenReturns').value,
+    openDisputes: $('pOpenDisputes').value,
+    notes: $('pNotes').value
+  });
+  btn.disabled = false;
+  setMsg(msg, res.message || 'Save nahi ho saka.', res.success ? 'ok' : 'err');
   if (res.success) loadStorePerfSummary();
 }
 
 async function loadStorePerfSummary() {
-  const sumBox = document.getElementById('perfSummaryBox');
-  const histBox = document.getElementById('perfHistoryBox');
-  sumBox.innerHTML = 'Loading...';
-  histBox.innerHTML = 'Loading...';
+  const sumBox = $('perfSummaryBox'), histBox = $('perfHistoryBox');
+  sumBox.className = 'loading'; sumBox.textContent = 'Loading...';
+  histBox.className = 'loading'; histBox.textContent = 'Loading...';
 
-  const res = await callApi('getStorePerformanceSummary', { empId: currentEmp.empId, store: currentStore });
+  const res = await callApi('getStorePerformanceSummary', { store: currentStore });
   if (!res.success) {
-    sumBox.innerHTML = '<div class="status-msg status-err">' + (res.message || 'Load nahi ho saka.') + '</div>';
-    histBox.innerHTML = '';
+    sumBox.className = ''; sumBox.innerHTML = '<div class="status-msg status-err">' + esc(res.message || 'Load nahi ho saka.') + '</div>';
+    histBox.textContent = '';
     return;
   }
+  sumBox.className = '';
+  sumBox.innerHTML = '<div class="summary-row"><span>Last 30 Days Sales</span><b>£' + Number(res.last30DaysSales).toFixed(2) + '</b></div>';
 
-  sumBox.innerHTML = `<div class="summary-row"><span>Last 30 Days Sales</span><b>£${res.last30DaysSales.toFixed(2)}</b></div>`;
-
-  if (res.todayEntry) {
-    // Pre-fill the form with today's already-saved entry so it's clear it can be edited.
-    document.getElementById('pTotalSales').value = res.todayEntry.totalSales;
-    document.getElementById('pNewListings').value = res.todayEntry.newListings;
-    document.getElementById('pListingsOptimized').value = res.todayEntry.listingsOptimized === 'Yes' ? 'yes' : 'no';
-    document.getElementById('pOrdersDone').checked = res.todayEntry.ordersDone === 'Yes';
-    document.getElementById('pMessagesReplied').checked = res.todayEntry.messagesReplied === 'Yes';
-    document.getElementById('pTrackingUploaded').checked = res.todayEntry.trackingUploaded === 'Yes';
-    document.getElementById('pOpenReturns').value = res.todayEntry.openReturns;
-    document.getElementById('pOpenDisputes').value = res.todayEntry.openDisputes;
-    document.getElementById('pNotes').value = res.todayEntry.notes || '';
+  const t = res.todayEntry;
+  if (t) {   // pre-fill so it is clear today's entry can be edited
+    $('pTotalSales').value = t.totalSales;
+    $('pNewListings').value = t.newListings;
+    $('pListingsOptimized').value = t.listingsOptimized === 'Yes' ? 'yes' : 'no';
+    $('pOrdersDone').checked = t.ordersDone === 'Yes';
+    $('pMessagesReplied').checked = t.messagesReplied === 'Yes';
+    $('pTrackingUploaded').checked = t.trackingUploaded === 'Yes';
+    $('pOpenReturns').value = t.openReturns;
+    $('pOpenDisputes').value = t.openDisputes;
+    $('pNotes').value = t.notes || '';
   }
 
-  if (res.records.length === 0) {
-    histBox.innerHTML = '<div style="color:#888;font-size:13px;">Abhi tak koi entry nahi hai.</div>';
-    return;
-  }
-
-  histBox.innerHTML = res.records.map(r => `
-    <div class="history-row">
-      <div class="hdate">${r.date} — £${Number(r.totalSales).toFixed(2)}</div>
-      <div class="history-grid">
-        <span>New Listings: ${r.newListings}</span>
-        <span>Optimized: ${r.listingsOptimized}</span>
-        <span>Orders: ${r.ordersDone}</span>
-        <span>Messages: ${r.messagesReplied}</span>
-        <span>Tracking: ${r.trackingUploaded}</span>
-        <span>Returns/Disputes: ${r.openReturns}/${r.openDisputes}</span>
-      </div>
-      ${r.notes ? `<div style="margin-top:4px;color:#888;">📝 ${r.notes}</div>` : ''}
-    </div>
-  `).join('');
+  if (!res.records.length) { histBox.className = ''; histBox.innerHTML = '<div style="color:#888;font-size:13px;">Abhi tak koi entry nahi hai.</div>'; return; }
+  histBox.className = '';
+  histBox.innerHTML = res.records.map(r =>
+    '<div class="history-row">' +
+      '<div class="hdate">' + esc(r.date) + ' — £' + Number(r.totalSales).toFixed(2) + '</div>' +
+      '<div class="history-grid">' +
+        '<span>New Listings: ' + esc(r.newListings) + '</span><span>Optimized: ' + esc(r.listingsOptimized) + '</span>' +
+        '<span>Orders: ' + esc(r.ordersDone) + '</span><span>Messages: ' + esc(r.messagesReplied) + '</span>' +
+        '<span>Tracking: ' + esc(r.trackingUploaded) + '</span><span>Returns/Disputes: ' + esc(r.openReturns) + '/' + esc(r.openDisputes) + '</span>' +
+      '</div>' +
+      (r.notes ? '<div style="margin-top:4px;color:#888;">📝 ' + esc(r.notes) + '</div>' : '') +
+    '</div>').join('');
 }
 </script>
 </body>
